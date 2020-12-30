@@ -1,4 +1,5 @@
 #include <string>
+#include <map>
 #include <vector>
 #include <opencv2/opencv.hpp>
 
@@ -22,6 +23,7 @@ class Stream
     Stream(cv::VideoCapture vid, std::vector<int> trig_nums, Interval interval, std::string ID);
     ~Stream();
     void getFrame(int query_trig_n, cv::Mat &frame);
+    std::string getID();
   private:
     cv::VideoCapture _vid;
     std::vector<int> _trig_nums;
@@ -30,16 +32,26 @@ class Stream
     cv::Mat _frame_last;
 };
 
+class FrameSet
+{
+public:
+  FrameSet(std::map<std::string, cv::Mat> imgs, int trig_n);
+  cv::Mat operator[](std::string ID);
+  int getTrigN() const;
+  void checkForEmptyFrames();
+
+private:
+  std::map<std::string, cv::Mat> _imgs;
+  const int _trig_n;
+};
+
 class VideoSynchronizer
 {
 public:
   VideoSynchronizer(std::string dirpath,int skip_init_frames=0);
-  std::vector<cv::Mat> getFrames();
+  FrameSet getFrames();
   
 private:
-  void checkForEmptyFrames(std::vector<cv::Mat> &imgs);
-  void assertAllFramesEmpty(std::vector<cv::Mat> &imgs);
-
   std::vector<Stream> _streams;
   int _trig_n;
 };

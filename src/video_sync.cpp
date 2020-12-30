@@ -35,36 +35,47 @@ VideoSynchronizer::VideoSynchronizer(std::string dirpath,int skip_init_frames)
   _trig_n--;
 }
 
-std::vector<cv::Mat> VideoSynchronizer::getFrames()
+FrameSet VideoSynchronizer::getFrames()
 {
   _trig_n += 1;
   std::cout << "Trigger Number: " << _trig_n << std::endl;
   
-  std::vector<cv::Mat> imgs(_streams.size());
+  std::map<std::string, cv::Mat> imgs;
   for (int i=0; i<_streams.size();i++)
-    _streams[i].getFrame(_trig_n,imgs[i]);
-    
-  checkForEmptyFrames(imgs);
-  
-  return imgs;
+  {
+    std::string stream_ID(_streams[i].getID());
+    cv::Mat img;
+    _streams[i].getFrame(_trig_n,imgs[stream_ID]);
+  }
+
+  FrameSet frameset(imgs,_trig_n);  
+  return frameset;
 }
 
-void VideoSynchronizer::checkForEmptyFrames(std::vector<cv::Mat> &imgs)
+FrameSet::FrameSet(std::map<std::string, cv::Mat> imgs, int trig_n)
+  : _imgs(imgs), _trig_n(trig_n)
 {
-  for (auto &img : imgs)
+  checkForEmptyFrames();
+}
+
+cv::Mat FrameSet::operator[](std::string ID) {return _imgs[ID];}
+int FrameSet::getTrigN() const {return _trig_n;}
+
+void FrameSet::checkForEmptyFrames()
+{
+  int n_empty = 0;
+  for (const auto &[ID,img] : _imgs)
   {
     if (img.empty())
-    {
-      assertAllFramesEmpty(imgs);
-      throw std::runtime_error("Finished processing videos");
-    }
+      n_empty++;
   }
-}
 
-void VideoSynchronizer::assertAllFramesEmpty(std::vector<cv::Mat> &imgs)
-{
-  for (auto &img : imgs)
-    assert(img.empty());
+  if (n_empty == 0)
+    return;
+  else if (n_empty == _imgs.size())
+    throw std::runtime_error("Finished processing videos");
+  else if (n_empty > 0 && n_empty < _imgs.size())
+    throw std::runtime_error("Missing frames");
 }
 
 Stream::Stream(cv::VideoCapture vid, std::vector<int> trig_nums, Interval interval, std::string ID)
@@ -73,10 +84,8 @@ Stream::Stream(cv::VideoCapture vid, std::vector<int> trig_nums, Interval interv
   _vid.set(cv::CAP_PROP_POS_FRAMES,_interval.getBegin());
 }
 
-Stream::~Stream()
-{
-  _vid.release();
-}
+Stream::~Stream() {_vid.release();}
+std::string Stream::getID() {return _ID;}
 
 void Stream::getFrame(int query_trig_n, cv::Mat &frame)
 {
