@@ -6,8 +6,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS}
-                    ${PROJECT_SOURCE_DIR})
-add_executable(sync_videos sync_videos.cpp video_sync.cpp)
-add_executable(stitch_videos stitch_videos.cpp video_sync.cpp stitch_compute.cpp image_struct.cpp)
-target_link_libraries(sync_videos ${OpenCV_LIBS} stdc++fs)
-target_link_libraries(stitch_videos ${OpenCV_LIBS} stdc++fs)
+                    ${PROJECT_SOURCE_DIR}
+                    "${PROJECT_SOURCE_DIR}/image_stitch")
+
+add_subdirectory(image_stitch)
+
+add_library(video_tools video_sync.cpp)
+target_link_libraries(video_tools ${OpenCV_LIBS})
+
+add_executable(sync_videos sync_videos.cpp)
+target_link_libraries(sync_videos ${OpenCV_LIBS} video_tools stdc++fs)
+
+add_executable(stitch_videos stitch_videos.cpp)
+target_link_libraries(stitch_videos ${OpenCV_LIBS} image_stitch video_tools stdc++fs)
