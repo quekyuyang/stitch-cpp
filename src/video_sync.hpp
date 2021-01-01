@@ -38,7 +38,7 @@ public:
   FrameSet(std::map<std::string, cv::Mat> imgs, int trig_n);
   cv::Mat operator[](std::string ID);
   int getTrigN() const;
-  void checkForEmptyFrames();
+  void checkForEmptyFrames() const;
 
 private:
   std::map<std::string, cv::Mat> _imgs;

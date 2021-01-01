@@ -61,7 +61,7 @@ FrameSet::FrameSet(std::map<std::string, cv::Mat> imgs, int trig_n)
 cv::Mat FrameSet::operator[](std::string ID) {return _imgs[ID];}
 int FrameSet::getTrigN() const {return _trig_n;}
 
-void FrameSet::checkForEmptyFrames()
+void FrameSet::checkForEmptyFrames() const
 {
   int n_empty = 0;
   for (const auto &[ID,img] : _imgs)

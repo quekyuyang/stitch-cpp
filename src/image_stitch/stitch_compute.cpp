@@ -5,14 +5,14 @@
 #include "image_struct.hpp"
 #include "stitch_compute.hpp"
 
-cv::Mat findStitchParams(std::vector<cv::Mat> &imgs,const int nfeatures,
+cv::Mat findStitchParams(std::map<std::string,cv::Mat> &imgs,const int nfeatures,
                          const int max_error_inliers,const int min_n_inliers)
 {
   std::vector<Image> images;
-  for (auto &img : imgs)
+  for (const auto &[ID,img] : imgs)
   {
     cv::Mat img_histequal = equalizeHist(img);
-    Image image(img_histequal,nfeatures);
+    Image image(img_histequal,nfeatures,ID);
     if (!image.hasFeatures())
     {
       std::cout << "No features found" << std::endl;
@@ -61,7 +61,7 @@ void getMatches(cv::Mat des1,cv::Mat des2,std::vector<cv::DMatch> &matches)
   std::sort(matches.begin(),matches.end());
 }
 
-cv::Mat equalizeHist(cv::Mat &img)
+cv::Mat equalizeHist(const cv::Mat &img)
 {
   std::vector<cv::Mat> img_channels;
   cv::split(img,img_channels);

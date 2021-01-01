@@ -18,9 +18,9 @@ int main(int argc, char** argv)
   while (true)
   {
     auto frameset = vid_sync.getFrames();
-    std::vector<cv::Mat> imgs;
-    for (auto &ID : IDs)
-      imgs.push_back(frameset[ID]);
+    std::map<std::string,cv::Mat> imgs;
+    for (const auto &ID : IDs)
+      imgs[ID] = frameset[ID];
 
     cv::Mat stitch_img = findStitchParams(imgs,50000,10,70);
     if (stitch_img.empty())

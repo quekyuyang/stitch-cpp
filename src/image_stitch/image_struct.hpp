@@ -12,7 +12,7 @@ private:
   cv::Mat _des;
 
 public:
-  Image(const cv::Mat img,int nfeatures,std::string img_id="");
+  Image(const cv::Mat img,int nfeatures,std::string img_id);
   void findFeatures(int nfeatures=50000);
   
   cv::Mat getImg();
