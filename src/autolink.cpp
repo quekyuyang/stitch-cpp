@@ -22,14 +22,14 @@ int main(int argc, char** argv)
     for (const auto &ID : IDs)
       imgs[ID] = frameset[ID];
 
-    cv::Mat stitch_img = findStitchParams(imgs,50000,10,70);
-    if (stitch_img.empty())
-      continue;
-    cv::Mat display_img;
-    cv::resize(stitch_img,display_img,cv::Size(),0.4,0.4);
-    cv::namedWindow("Stitched",cv::WINDOW_AUTOSIZE);
-    cv::imshow("Stitched",display_img);
-    cv::waitKey(1);
+    StitchComputer stitch_computer(imgs,50000,10,70);
+
+    cv::Rect ROI_features1(340,0,300,imgs["lamp02"].cols-1);
+    cv::Rect ROI_features2(1100,0,200,imgs["lamp02"].cols-1);
+    std::vector<cv::Rect> ROIs_features{ROI_features1,ROI_features2};
+
+    std::vector<std::string> IDs_to_autolink{"lamp04","lamp02","lamp03","lamp06","lamp05"};
+    stitch_computer.autoLink(IDs_to_autolink,ROIs_features);
   }
   
   return 0;

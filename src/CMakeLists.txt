@@ -17,5 +17,5 @@ target_link_libraries(video_tools ${OpenCV_LIBS})
 add_executable(sync_videos sync_videos.cpp)
 target_link_libraries(sync_videos ${OpenCV_LIBS} video_tools stdc++fs)
 
-add_executable(stitch_videos stitch_videos.cpp)
-target_link_libraries(stitch_videos ${OpenCV_LIBS} image_stitch video_tools stdc++fs)
+add_executable(autolink autolink.cpp)
+target_link_libraries(autolink ${OpenCV_LIBS} image_stitch video_tools stdc++fs)
