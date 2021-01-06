@@ -3,8 +3,6 @@
 #include <opencv2/opencv.hpp>
 #include "image_struct.hpp"
 
-#include <iostream>
-
 Image::Image(const cv::Mat img, int nfeatures, std::string img_id)
             :_img(img), _img_id(img_id)
 {
