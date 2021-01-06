@@ -21,6 +21,28 @@ StitchComputer::StitchComputer(std::map<std::string,cv::Mat> imgs,const int nfea
   }
 }
 
+std::vector<cv::Rect> StitchComputer::getBotHalfROI(const std::vector<cv::Rect> &ROIs,const std::string &ID)
+{
+  std::vector<cv::Rect> ROIs_bot_half;
+  for (const auto &ROI : ROIs)
+  {
+    const cv::Point2i tl_new(ROI.tl().x,std::max(ROI.tl().y,_images[ID].getImg().rows/2));
+    ROIs_bot_half.push_back(cv::Rect(tl_new,ROI.br()));
+  }
+  return ROIs_bot_half;
+}
+
+std::vector<cv::Rect> StitchComputer::getTopHalfROI(const std::vector<cv::Rect> &ROIs,const std::string &ID)
+{
+  std::vector<cv::Rect> ROIs_top_half;
+  for (const auto &ROI : ROIs)
+  {
+    const cv::Point2i br_new(ROI.br().x,std::min(ROI.br().y,_images[ID].getImg().rows/2));
+    ROIs_top_half.push_back(cv::Rect(ROI.tl(),br_new));
+  }
+  return ROIs_top_half;
+}
+
 void StitchComputer::autoLink(std::vector<std::string> IDs,const std::vector<cv::Rect> ROIs_features)
 {
   for (const auto ID1 : IDs)
@@ -30,21 +52,8 @@ void StitchComputer::autoLink(std::vector<std::string> IDs,const std::vector<cv:
       if (ID1 == ID2)
         continue;
 
-      std::vector<cv::Rect> ROIs_image1;
-      for (const auto &ROI : ROIs_features)
-      {
-        const cv::Point2i tl_new(ROI.tl().x,std::max(ROI.tl().y,_images[ID1].getImg().rows/2));
-        ROIs_image1.push_back(cv::Rect(tl_new,ROI.br()));
-      }
-
-      std::vector<cv::Rect> ROIs_image2;
-      for (const auto &ROI : ROIs_features)
-      {
-        const cv::Point2i br_new(ROI.br().x,std::min(ROI.br().y,_images[ID2].getImg().rows/2));
-        ROIs_image2.push_back(cv::Rect(ROI.tl(),br_new));
-      }
-
-
+      auto ROIs_image1 = getBotHalfROI(ROIs_features,ID1);
+      auto ROIs_image2 = getTopHalfROI(ROIs_features,ID2);
 
       std::vector<cv::KeyPoint> kps1,kps2;
       cv::Mat des1,des2;

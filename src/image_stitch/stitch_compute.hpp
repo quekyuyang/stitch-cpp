@@ -72,6 +72,8 @@ class StitchComputer
 public:
   StitchComputer(std::map<std::string,cv::Mat> imgs,const int nfeatures,
                  const int max_error_inlier,const int min_n_inliers);
+  std::vector<cv::Rect> getBotHalfROI(const std::vector<cv::Rect> &ROIs,const std::string &ID);
+  std::vector<cv::Rect> getTopHalfROI(const std::vector<cv::Rect> &ROIs,const std::string &ID);
   void autoLink(std::vector<std::string> IDs,const std::vector<cv::Rect> ROIs_features);
   std::vector<Node> getNodes() const;
 
