@@ -4,6 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include "video_sync.hpp"
 #include "stitch_compute.hpp"
+#include "ParamsLog.hpp"
 
 int main(int argc, char** argv)
 {
@@ -14,8 +15,11 @@ int main(int argc, char** argv)
   }
   
   VideoSynchronizer vid_sync(argv[1]);
-  std::vector<std::string> IDs(argv+2,argv+argc); 
-  while (true)
+  std::vector<std::string> IDs(argv+2,argv+argc);
+
+  ParamsLogManager log_manager;
+  int i = 0;
+  while (i < 10)
   {
     auto frameset = vid_sync.getFrames();
     std::map<std::string,cv::Mat> imgs;
@@ -30,7 +34,14 @@ int main(int argc, char** argv)
 
     std::vector<std::string> IDs_to_autolink{"lamp04","lamp02","lamp03","lamp06","lamp05"};
     stitch_computer.autoLink(IDs_to_autolink,ROIs_features);
+    std::vector<Node> nodes =  stitch_computer.getNodes();
+    log_manager.addNodeData(nodes);
+
+    i++;
   }
-  
+
+  std::string filepath(std::string(argv[1]) + "/cpp.json");
+  log_manager.saveJson(filepath);
+
   return 0;
 }

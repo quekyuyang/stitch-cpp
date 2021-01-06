@@ -1,9 +1,13 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
 #include <opencv2/opencv.hpp>
 #include "stitch_compute.hpp"
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 StitchComputer::StitchComputer(std::map<std::string,cv::Mat> imgs,const int nfeatures,
                                const int max_error_inlier,const int min_n_inliers)
@@ -67,9 +71,12 @@ void StitchComputer::autoLink(std::vector<std::string> IDs,const std::vector<cv:
   }
 
   _network.findBestLinks();
-  _network.showNodesAndLinks();
 }
 
+std::vector<Node> StitchComputer::getNodes() const
+{
+  return _network.getNodes();
+}
 
 
 
@@ -90,10 +97,13 @@ void Network::findBestLinks()
     node.findBestLink();
 }
 
-void Network::showNodesAndLinks()
+std::vector<Node> Network::getNodes() const
 {
+  std::vector<Node> nodes;
   for (auto &[ID,node] : _nodes)
-    std::cout << ID << "," << node._best_link->_target_ID << ": " << node._best_link->_n_inliers << std::endl;
+    nodes.push_back(node);
+
+  return nodes;
 }
 
 
@@ -123,15 +133,21 @@ void Node::findBestLink()
       ID_most_inliers = ID;
     }
   }
-  _best_link = std::make_unique<Link>(Link(_links[ID_most_inliers]));
+  _best_link = Link(_links[ID_most_inliers]);
 }
 
+std::string Node::getID() const {return _ID;}
+Link Node::getBestLink() const {return _best_link;}
 
 
 
 Link::Link(const std::string target_ID,const int n_inliers,const cv::Mat homo_mat)
   : _target_ID(target_ID), _n_inliers(n_inliers), _homo_mat(homo_mat)
 {}
+
+std::string Link::getTargetID() const {return _target_ID;}
+int Link::getNInliers() const {return _n_inliers;}
+cv::Mat Link::getHomoMat() const {return _homo_mat;}
 
 
 
