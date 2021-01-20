@@ -24,6 +24,6 @@ int main(int argc, char** argv)
     imgs[ID] = frameset[ID];
 
   Network network(imgs,jpath);
-  
+
   return 0;
 }
