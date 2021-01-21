@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include "video_sync.hpp"
-#include "stitch_assemble.hpp"
+#include "params_reader.hpp"
 
 int main(int argc, char** argv)
 {

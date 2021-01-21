@@ -6,7 +6,7 @@
 #include <memory>
 #include <stdexcept>
 #include <opencv2/opencv.hpp>
-#include "stitch_assemble.hpp"
+#include "params_reader.hpp"
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
