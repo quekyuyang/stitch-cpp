@@ -18,8 +18,10 @@ public:
 									std::shared_ptr<Link> &link_candidate);
 	void addTopLink(std::shared_ptr<Node> node,
 									std::shared_ptr<Link> &link_candidate);
+	void checkNetwork();
 
 private:
+	std::map<std::string,std::shared_ptr<Node>> _nodes;
 	std::vector<std::shared_ptr<Link>> _links;
 };
 

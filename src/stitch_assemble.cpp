@@ -4,6 +4,7 @@
 #include <map>
 #include <array>
 #include <memory>
+#include <stdexcept>
 #include <opencv2/opencv.hpp>
 #include "stitch_assemble.hpp"
 #include <nlohmann/json.hpp>
@@ -16,26 +17,19 @@ Network::Network(std::map<std::string,cv::Mat> imgs,std::string jpath)
 	json j;
 	jfile >> j;
 
-	std::map<std::string,std::shared_ptr<Node>> nodes;
-
 	for (auto &[key,value] : j.items())
 	{
 		auto ID_pair = splitIDPair(key);
 
-		auto [node1,success1] = nodes.emplace(ID_pair[0],
+		auto [node1,success1] = _nodes.emplace(ID_pair[0],
 			std::make_shared<Node>(imgs[ID_pair[0]],ID_pair[0]));
-		auto [node2,success2] = nodes.emplace(ID_pair[1],
+		auto [node2,success2] = _nodes.emplace(ID_pair[1],
 			std::make_shared<Node>(imgs[ID_pair[1]],ID_pair[1]));
 
 		linkNodes(node1->second,node2->second,value["params"]);
 	}
 
-	for (auto &[ID,node] : nodes)
-	{
-		std::cout << *node << std::endl;
-		std::cout << "link_top: " << node->_link_top;
-		std::cout << "link_bot: " << node->_link_bot;
-	}
+	checkNetwork();
 }
 
 void Network::linkNodes(std::shared_ptr<Node> node_top,
@@ -123,6 +117,37 @@ void Network::addTopLink(std::shared_ptr<Node> node,
 		node->_link_top = link_candidate;
 	}
 }
+
+void Network::checkNetwork()
+{
+	std::string ID_top;
+	for (const auto &[ID,node] : _nodes)
+	{
+		// Look for node without a _link_top
+		if (!node->_link_top.lock())
+			ID_top = ID;
+	}
+	std::shared_ptr<Node> node = _nodes[ID_top];
+	std::vector<std::shared_ptr<Node>> explored;
+	std::cout << "Constructed network in the following order:" << std::endl;
+	while (true)
+	{
+		if (std::find(explored.begin(),explored.end(),node)!=explored.end())
+			throw std::runtime_error("Recursive node links");
+		explored.push_back(node);
+		std::cout << *node << std::endl;
+
+		if (auto link_bot = node->_link_bot.lock())
+			node = link_bot->_node_bot;
+		else
+			break;
+	}
+
+	assert(_nodes.size() == explored.size());
+}
+
+
+
 
 
 Node::Node(cv::Mat &img,const std::string ID)
