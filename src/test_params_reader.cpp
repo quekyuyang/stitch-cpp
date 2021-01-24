@@ -22,7 +22,7 @@ int main(int argc, char** argv)
   for (const auto &ID : IDs)
     imgs[ID] = frameset[ID];
 
-  Network network(imgs,jpath);
+  Network network(jpath);
 
   return 0;
 }

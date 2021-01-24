@@ -10,7 +10,7 @@ class Link;
 class Network
 {
 public:
-	Network(std::map<std::string,cv::Mat> imgs,std::string jpath);
+	Network(std::string jpath);
 	void linkNodes(std::shared_ptr<Node> node_top,
 								 std::shared_ptr<Node> node_bot,
 								 std::vector<std::vector<double>> params);
@@ -31,10 +31,9 @@ friend Network;
 friend std::ostream& operator<<(std::ostream &os,const Node &node);
 
 public:
-	Node(cv::Mat &img,const std::string ID);
+	Node(const std::string ID);
 
 private:
-	cv::Mat _img;
 	std::string _ID;
 	std::weak_ptr<Link> _link_top;
 	std::weak_ptr<Link> _link_bot;

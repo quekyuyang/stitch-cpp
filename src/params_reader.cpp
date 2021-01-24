@@ -11,7 +11,7 @@
 
 using json = nlohmann::json;
 
-Network::Network(std::map<std::string,cv::Mat> imgs,std::string jpath)
+Network::Network(std::string jpath)
 {
 	std::ifstream jfile(jpath);
 	json j;
@@ -22,9 +22,9 @@ Network::Network(std::map<std::string,cv::Mat> imgs,std::string jpath)
 		auto ID_pair = splitIDPair(key);
 
 		auto [node1,success1] = _nodes.emplace(ID_pair[0],
-			std::make_shared<Node>(imgs[ID_pair[0]],ID_pair[0]));
+			std::make_shared<Node>(ID_pair[0]));
 		auto [node2,success2] = _nodes.emplace(ID_pair[1],
-			std::make_shared<Node>(imgs[ID_pair[1]],ID_pair[1]));
+			std::make_shared<Node>(ID_pair[1]));
 
 		linkNodes(node1->second,node2->second,value["params"]);
 	}
@@ -150,8 +150,8 @@ void Network::checkNetwork()
 
 
 
-Node::Node(cv::Mat &img,const std::string ID)
-	: _img(img),_ID(ID)
+Node::Node(const std::string ID)
+	: _ID(ID)
 {}
 
 Link::Link(std::shared_ptr<Node> node_top,
