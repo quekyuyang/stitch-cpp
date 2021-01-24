@@ -22,7 +22,17 @@ int main(int argc, char** argv)
   for (const auto &ID : IDs)
     imgs[ID] = frameset[ID];
 
-  Network network(jpath);
+  auto stitch_config = getParams(jpath);
+  for (auto &[ID,params_log] : stitch_config)
+  {
+    std::cout << ID << std::endl;
+    for (auto &params : params_log)
+    {
+      for (auto &param : params)
+        std::cout << param << ", ";
+      std::cout << std::endl;
+    }
+  }
 
   return 0;
 }

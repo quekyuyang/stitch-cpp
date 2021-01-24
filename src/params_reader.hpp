@@ -4,6 +4,10 @@
 #include <memory>
 #include <opencv2/opencv.hpp>
 
+using paramslog = std::vector<std::vector<double>>;
+
+std::vector<std::pair<std::string,paramslog>> getParams(std::string jpath);
+
 class Node;
 class Link;
 
@@ -18,10 +22,11 @@ public:
 									std::shared_ptr<Link> &link_candidate);
 	void addTopLink(std::shared_ptr<Node> node,
 									std::shared_ptr<Link> &link_candidate);
-	void checkNetwork();
+	std::vector<std::pair<std::string,paramslog>> getStitchConfig();
 
 private:
 	std::map<std::string,std::shared_ptr<Node>> _nodes;
+	std::shared_ptr<Node> _node_top;
 	std::vector<std::shared_ptr<Link>> _links;
 };
 
@@ -47,12 +52,13 @@ friend std::ostream& operator<<(std::ostream &os,const std::weak_ptr<Link> &link
 public:
 	Link(std::shared_ptr<Node> node_top,
 			 std::shared_ptr<Node> node_bot,
-			 const cv::Mat homo_mat,const int link_strength);
+			 const std::vector<std::vector<double>> &homo_params,
+			 const int link_strength);
 
 private:
 	std::shared_ptr<Node> _node_top;
 	std::shared_ptr<Node> _node_bot;
-	const cv::Mat _homo_mat;
+	const std::vector<std::vector<double>> _homo_params;
 	const int _link_strength;
 };
 

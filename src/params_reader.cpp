@@ -10,6 +10,15 @@
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
+using paramslog = std::vector<std::vector<double>>;
+
+std::vector<std::pair<std::string,paramslog>> getParams(std::string jpath)
+{
+	Network network(jpath);
+	return network.getStitchConfig();
+}
+
+
 
 Network::Network(std::string jpath)
 {
@@ -28,8 +37,6 @@ Network::Network(std::string jpath)
 
 		linkNodes(node1->second,node2->second,value["params"]);
 	}
-
-	checkNetwork();
 }
 
 void Network::linkNodes(std::shared_ptr<Node> node_top,
@@ -37,28 +44,11 @@ void Network::linkNodes(std::shared_ptr<Node> node_top,
 							 					std::vector<std::vector<double>> params)
 {
 	const int link_strength = params.size();
-
-	cv::Mat params_mat;
-	for (auto param : params)
-	{
-		params_mat.push_back(cv::Mat(param).reshape(1,1));
-	}
-	cv::Mat params_mean;
-	cv::reduce(params_mat,params_mean,0,cv::REDUCE_AVG);
-
-	const cv::Mat homo_mat = params_mean.reshape(1,3);
-	auto link = std::make_shared<Link>(node_top,node_bot,homo_mat,link_strength);
+	auto link = std::make_shared<Link>(node_top,node_bot,params,link_strength);
 
 	addBotLink(node_top,link);
 	addTopLink(node_bot,link);
 }
-/*
-	cv::Mat stitch;
-	cv::warpPerspective(node_bot._img,stitch,homo_mat,cv::Size(1844,1700));
-
-	cv::Mat ROI = stitch.rowRange(0,node_top._img.rows);
-	node_top._img.copyTo(ROI);
-}*/
 
 void Network::addBotLink(std::shared_ptr<Node> node,
 												 std::shared_ptr<Link> &link_candidate)
@@ -118,16 +108,22 @@ void Network::addTopLink(std::shared_ptr<Node> node,
 	}
 }
 
-void Network::checkNetwork()
+std::vector<std::pair<std::string,paramslog>> Network::getStitchConfig()
 {
-	std::string ID_top;
 	for (const auto &[ID,node] : _nodes)
 	{
 		// Look for node without a _link_top
 		if (!node->_link_top.lock())
-			ID_top = ID;
+			_node_top = node;
 	}
-	std::shared_ptr<Node> node = _nodes[ID_top];
+
+	// Create object to return with top node as first entry
+	std::vector<std::pair<std::string,paramslog>> stitch_config;
+	std::vector<double> eye_params{1,0,0,0,1,0,0,0,1};
+	paramslog eye_paramslog = {eye_params}; //paramslog with only one entry
+	stitch_config.push_back(std::make_pair(_node_top->_ID,eye_paramslog));
+
+	std::shared_ptr<Node> node = _node_top;
 	std::vector<std::shared_ptr<Node>> explored;
 	std::cout << "Constructed network in the following order:" << std::endl;
 	while (true)
@@ -138,12 +134,16 @@ void Network::checkNetwork()
 		std::cout << *node << std::endl;
 
 		if (auto link_bot = node->_link_bot.lock())
+		{
 			node = link_bot->_node_bot;
+			stitch_config.push_back(std::make_pair(node->_ID,link_bot->_homo_params));
+		}
 		else
 			break;
 	}
 
 	assert(_nodes.size() == explored.size());
+	return stitch_config;
 }
 
 
@@ -156,9 +156,10 @@ Node::Node(const std::string ID)
 
 Link::Link(std::shared_ptr<Node> node_top,
 		 			 std::shared_ptr<Node> node_bot,
-		 		 	 const cv::Mat homo_mat,const int link_strength)
+		 		 	 const std::vector<std::vector<double>> &homo_params,
+					 const int link_strength)
 	: _node_top(node_top), _node_bot(node_bot),
-	  _homo_mat(homo_mat), _link_strength(link_strength)
+	  _homo_params(homo_params), _link_strength(link_strength)
 {}
 
 
