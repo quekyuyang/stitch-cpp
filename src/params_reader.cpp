@@ -10,9 +10,8 @@
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
-using paramslog = std::vector<std::vector<double>>;
 
-std::vector<std::pair<std::string,paramslog>> getParams(std::string jpath)
+std::vector<std::pair<std::string,ParamsLog>> getParams(std::string jpath)
 {
 	Network network(jpath);
 	return network.getStitchConfig();
@@ -108,7 +107,7 @@ void Network::addTopLink(std::shared_ptr<Node> node,
 	}
 }
 
-std::vector<std::pair<std::string,paramslog>> Network::getStitchConfig()
+std::vector<std::pair<std::string,ParamsLog>> Network::getStitchConfig()
 {
 	for (const auto &[ID,node] : _nodes)
 	{
@@ -118,20 +117,18 @@ std::vector<std::pair<std::string,paramslog>> Network::getStitchConfig()
 	}
 
 	// Create object to return with top node as first entry
-	std::vector<std::pair<std::string,paramslog>> stitch_config;
+	std::vector<std::pair<std::string,ParamsLog>> stitch_config;
 	std::vector<double> eye_params{1,0,0,0,1,0,0,0,1};
-	paramslog eye_paramslog = {eye_params}; //paramslog with only one entry
+	ParamsLog eye_paramslog = {eye_params}; //paramslog with only one entry
 	stitch_config.push_back(std::make_pair(_node_top->_ID,eye_paramslog));
 
 	std::shared_ptr<Node> node = _node_top;
 	std::vector<std::shared_ptr<Node>> explored;
-	std::cout << "Constructed network in the following order:" << std::endl;
 	while (true)
 	{
 		if (std::find(explored.begin(),explored.end(),node)!=explored.end())
 			throw std::runtime_error("Recursive node links");
 		explored.push_back(node);
-		std::cout << *node << std::endl;
 
 		if (auto link_bot = node->_link_bot.lock())
 		{

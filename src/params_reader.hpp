@@ -4,9 +4,9 @@
 #include <memory>
 #include <opencv2/opencv.hpp>
 
-using paramslog = std::vector<std::vector<double>>;
+using ParamsLog = std::vector<std::vector<double>>;
 
-std::vector<std::pair<std::string,paramslog>> getParams(std::string jpath);
+std::vector<std::pair<std::string,ParamsLog>> getParams(std::string jpath);
 
 class Node;
 class Link;
@@ -22,7 +22,7 @@ public:
 									std::shared_ptr<Link> &link_candidate);
 	void addTopLink(std::shared_ptr<Node> node,
 									std::shared_ptr<Link> &link_candidate);
-	std::vector<std::pair<std::string,paramslog>> getStitchConfig();
+	std::vector<std::pair<std::string,ParamsLog>> getStitchConfig();
 
 private:
 	std::map<std::string,std::shared_ptr<Node>> _nodes;
