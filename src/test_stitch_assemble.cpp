@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <opencv2/highgui.hpp>
 #include "video_sync.hpp"
 #include "params_reader.hpp"
 #include "stitch_assemble.hpp"
@@ -37,7 +38,10 @@ int main(int argc, char** argv)
     params_means.push_back(params_mean.reshape(1,3));
   }
 
-  stitchImages(imgs,params_means);
+  auto stitched = stitchImages(imgs,params_means);
+  cv::resize(stitched,stitched,cv::Size(),0.25,0.25);
+  cv::imshow("Stitched",stitched);
+  cv::waitKey(0);
 
   return 0;
 }
