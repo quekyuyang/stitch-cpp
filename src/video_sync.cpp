@@ -19,9 +19,9 @@ VideoSynchronizer::VideoSynchronizer(std::string dirpath,int skip_init_frames)
     std::string stream_ID = filename.substr(0,6);
     trig_nums_streams[stream_ID] = readTrigN(entry.path());
   }
-  
+
   auto intervals = getFrameIntervals(trig_nums_streams);
-  
+
   std::string vid_dirpath = dirpath + "/videos";
   for (auto &entry : std::filesystem::directory_iterator(vid_dirpath))
   {
@@ -29,7 +29,7 @@ VideoSynchronizer::VideoSynchronizer(std::string dirpath,int skip_init_frames)
     std::string stream_ID = filename.substr(0,6);
     _streams.push_back(Stream(cv::VideoCapture(entry.path()),trig_nums_streams[stream_ID],intervals[stream_ID],stream_ID));
   }
-  
+
   std::string stream_ID = trig_nums_streams.begin()->first;
   _trig_n = trig_nums_streams[stream_ID][intervals[stream_ID].getBegin()];
   _trig_n--;
@@ -39,7 +39,7 @@ FrameSet VideoSynchronizer::getFrames()
 {
   _trig_n += 1;
   std::cout << "Trigger Number: " << _trig_n << std::endl;
-  
+
   std::map<std::string, cv::Mat> imgs;
   for (int i=0; i<_streams.size();i++)
   {
@@ -48,7 +48,7 @@ FrameSet VideoSynchronizer::getFrames()
     _streams[i].getFrame(_trig_n,imgs[stream_ID]);
   }
 
-  FrameSet frameset(imgs,_trig_n);  
+  FrameSet frameset(imgs,_trig_n);
   return frameset;
 }
 
@@ -95,7 +95,7 @@ void Stream::getFrame(int query_trig_n, cv::Mat &frame)
     std::cout << "Reached end of stream " << _ID << std::endl;
     return;
   }
-    
+
   if (_trig_nums[vid_pos] == query_trig_n)
   {
     if (!_vid.read(frame))
@@ -103,7 +103,7 @@ void Stream::getFrame(int query_trig_n, cv::Mat &frame)
       frame = cv::Mat();
       return;
     }
-      
+
     _frame_last = frame;
   }
   else if (!_frame_last.empty())
@@ -125,16 +125,16 @@ std::vector<int> readTrigN(std::string filepath)
   std::vector<int> trig_nums;
   std::ifstream filestream(filepath);
   std::string line;
-  
+
   while (std::getline(filestream,line))
-  {  
+  {
     std::istringstream linestream(line);
     int trig_n;
     linestream >> trig_n;
-    
+
     trig_nums.push_back(trig_n);
   }
-  
+
   return trig_nums;
 }
 
@@ -154,36 +154,36 @@ std::map<std::string, Interval> getFrameIntervals(const std::map<std::string, st
     interval_start_idxs = getTrigNIdxs(trig_nums_streams,latest_first_trig_n);
     latest_first_trig_n++;
   }
-  
+
   for (const auto [ID,interval_start_idx] : interval_start_idxs)
   {
     intervals[ID]; // Create map entry with default initialized Interval
     intervals[ID].setBegin(interval_start_idx);
   }
-  
+
   // Find interval ends
   std::vector<int> last_trig_nums;
   for (const auto &[ID,trig_nums] : trig_nums_streams)
     last_trig_nums.push_back(trig_nums.back());
   int earliest_last_trig_n = *std::min_element(last_trig_nums.begin(),last_trig_nums.end());
-  
+
   std::map<std::string,std::vector<int>::size_type> interval_end_idxs;
   while (interval_end_idxs.empty())
   {
     interval_end_idxs = getTrigNIdxs(trig_nums_streams,earliest_last_trig_n);
     earliest_last_trig_n--;
   }
-  
+
   for (const auto [ID,interval_end_idx] : interval_end_idxs)
     intervals[ID].setEnd(interval_end_idx);
-    
+
   return intervals;
 }
 
 std::map<std::string,std::vector<int>::size_type> getTrigNIdxs(const std::map<std::string,std::vector<int>> &trig_nums_streams, int trig_n)
 {
   std::map<std::string,std::vector<int>::size_type> trig_n_idxs;
-  
+
   for (const auto &[ID,trig_nums] : trig_nums_streams)
   {
     auto it_trig_n = std::find(trig_nums.begin(),trig_nums.end(),trig_n);

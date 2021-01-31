@@ -16,9 +16,6 @@ add_subdirectory(image_stitch)
 add_library(video_tools video_sync.cpp)
 target_link_libraries(video_tools ${OpenCV_LIBS})
 
-add_executable(sync_videos test_sync_videos.cpp)
-target_link_libraries(sync_videos ${OpenCV_LIBS} video_tools stdc++fs)
-
 add_executable(autolink test_autolink.cpp ParamsLog.cpp)
 target_link_libraries(autolink ${OpenCV_LIBS} image_stitch video_tools stdc++fs nlohmann_json::nlohmann_json)
 

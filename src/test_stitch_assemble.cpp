@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <opencv2/highgui.hpp>
+#include <opencv2/opencv.hpp>
 #include "video_sync.hpp"
 #include "params_reader.hpp"
 #include "stitch_assemble.hpp"
@@ -15,14 +15,10 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  VideoSynchronizer vid_sync(argv[1]);
+  std::string vid_group_path(argv[1]);
+  VideoSynchronizer vid_sync(vid_group_path);
   std::string jpath(argv[2]);
   std::vector<std::string> IDs(argv+3,argv+argc);
-
-  auto frameset = vid_sync.getFrames();
-  std::vector<cv::Mat> imgs;
-  for (const auto &ID : IDs)
-    imgs.push_back(frameset[ID]);
 
   auto stitch_config = getParams(jpath);
   std::vector<cv::Mat> params_means;
@@ -38,10 +34,28 @@ int main(int argc, char** argv)
     params_means.push_back(params_mean.reshape(1,3));
   }
 
-  auto stitched = stitchImages(imgs,params_means);
-  cv::resize(stitched,stitched,cv::Size(),0.25,0.25);
-  cv::imshow("Stitched",stitched);
-  cv::waitKey(0);
+  cv::Size resolution(1920,1080);
+  int codec = cv::VideoWriter::fourcc('m','p','4','v');
+  cv::VideoWriter vid_stitch(vid_group_path+"/stitched/video.mp4",codec,30,resolution);
+  while (true)
+  {
+    auto frameset = vid_sync.getFrames();
+    std::vector<cv::Mat> imgs;
+    for (const auto &ID : IDs)
+      imgs.push_back(frameset[ID]);
+
+    auto stitched = stitchImages(imgs,params_means);
+    cv::rotate(stitched,stitched,cv::ROTATE_90_COUNTERCLOCKWISE);
+    cv::resize(stitched,stitched,resolution);
+    vid_stitch.write(stitched);
+    cv::imshow("Stitched",stitched);
+    char user_input = cv::waitKey(1);
+    if (user_input == 27)
+    {
+      std::cout << "Interrupted by user" << std::endl;
+      break;
+    }
+  }
 
   return 0;
 }
