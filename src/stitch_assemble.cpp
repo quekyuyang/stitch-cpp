@@ -27,7 +27,7 @@ cv::Mat stitchImages(const std::vector<cv::Mat> &imgs,
     verts_sets_points.push_back(verts_points);
   }
 
-  cv::Mat stitched(stitch_size,CV_8UC3);
+  cv::Mat stitched(stitch_size,CV_8UC3,cv::Scalar(0,0,0));
   for (int i = 0; i < imgs.size(); i++)
   {
     cv::Mat warped_single(stitch_size,CV_8UC3);

@@ -48,6 +48,7 @@ int main(int argc, char** argv)
     cv::rotate(stitched,stitched,cv::ROTATE_90_COUNTERCLOCKWISE);
     cv::resize(stitched,stitched,resolution);
     vid_stitch.write(stitched);
+
     cv::imshow("Stitched",stitched);
     char user_input = cv::waitKey(1);
     if (user_input == 27)
