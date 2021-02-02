@@ -43,6 +43,32 @@ std::vector<cv::Rect> StitchComputer::getTopHalfROI(const std::vector<cv::Rect> 
   return ROIs_top_half;
 }
 
+void StitchComputer::manualLink(std::string ID1,std::string ID2,
+                                std::vector<cv::Rect> ROIs_features1,
+                                std::vector<cv::Rect> ROIs_features2)
+{
+  std::vector<cv::KeyPoint> kps1,kps2;
+  cv::Mat des1,des2;
+  _images[ID1].getKpsAndDes(kps1,des1,ROIs_features1);
+  _images[ID2].getKpsAndDes(kps2,des2,ROIs_features2);
+
+  std::vector<cv::DMatch> matches;
+  getMatches(des1,des2,matches);
+  std::vector<cv::Point2f> pts1_match,pts2_match;
+  for (const auto &match : matches)
+  {
+    pts1_match.push_back(kps1[match.queryIdx].pt);
+    pts2_match.push_back(kps2[match.trainIdx].pt);
+  }
+
+  cv::Mat mask;
+  const cv::Mat homo_mat = cv::findHomography(pts2_match,pts1_match,cv::RANSAC,
+                                              _max_error_inlier,mask);
+  const int n_inliers = cv::sum(mask)[0];
+
+  _network.addLink(ID1,ID2,n_inliers,homo_mat);
+}
+
 void StitchComputer::autoLink(std::vector<std::string> IDs,const std::vector<cv::Rect> ROIs_features)
 {
   for (const auto ID1 : IDs)
@@ -62,14 +88,14 @@ void StitchComputer::autoLink(std::vector<std::string> IDs,const std::vector<cv:
 
       std::vector<cv::DMatch> matches;
       getMatches(des1,des2,matches);
-      
-      std::vector<cv::Point2f> pts1_match,pts2_match; 
+
+      std::vector<cv::Point2f> pts1_match,pts2_match;
       for (const auto &match : matches)
       {
         pts1_match.push_back(kps1[match.queryIdx].pt);
         pts2_match.push_back(kps2[match.trainIdx].pt);
       }
-      
+
       cv::Mat mask;
       const cv::Mat homo_mat = cv::findHomography(pts2_match,pts1_match,cv::RANSAC,_max_error_inlier,mask);
       const int n_inliers = cv::sum(mask)[0];
@@ -78,12 +104,11 @@ void StitchComputer::autoLink(std::vector<std::string> IDs,const std::vector<cv:
         _network.addLink(ID1,ID2,n_inliers,homo_mat);
     }
   }
-
-  _network.findBestLinks();
 }
 
-std::vector<Node> StitchComputer::getNodes() const
+std::vector<Node> StitchComputer::getNodes()
 {
+  _network.findBestLinks();
   return _network.getNodes();
 }
 
@@ -110,7 +135,12 @@ std::vector<Node> Network::getNodes() const
 {
   std::vector<Node> nodes;
   for (auto &[ID,node] : _nodes)
+  {
     nodes.push_back(node);
+    std::cout << node._ID << std::endl;
+    std::cout << node.getBestLink().getTargetID() << std::endl;
+  }
+
 
   return nodes;
 }
@@ -172,10 +202,10 @@ cv::Mat equalizeHist(const cv::Mat &img)
 {
   std::vector<cv::Mat> img_channels;
   cv::split(img,img_channels);
-  
+
   for (auto img_channel : img_channels)
     cv::equalizeHist(img_channel,img_channel);
-  
+
   cv::Mat img_equal;
   cv::merge(img_channels,img_equal);
   return img_equal;

@@ -75,7 +75,9 @@ public:
   std::vector<cv::Rect> getBotHalfROI(const std::vector<cv::Rect> &ROIs,const std::string &ID);
   std::vector<cv::Rect> getTopHalfROI(const std::vector<cv::Rect> &ROIs,const std::string &ID);
   void autoLink(std::vector<std::string> IDs,const std::vector<cv::Rect> ROIs_features);
-  std::vector<Node> getNodes() const;
+  void manualLink(std::string ID1,std::string ID2,
+    std::vector<cv::Rect> ROIs_features1,std::vector<cv::Rect>ROIs_features2);
+  std::vector<Node> getNodes();
 
 private:
   const int _max_error_inlier;
