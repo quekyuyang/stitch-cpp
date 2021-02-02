@@ -20,6 +20,12 @@ cv::Mat stitchImages(const std::vector<cv::Mat> &imgs,
   int height = verts_bounds.at<int>(3) - verts_bounds.at<int>(1);
   cv::Size stitch_size(width,height);
 
+  if (verts_bounds.at<int>(0) < 0)
+  {
+    addTransMats(cumul_homo_mats,-verts_bounds.at<int>(0),0);
+    addTransVerts(verts_sets,-verts_bounds.at<int>(0),0);
+  }
+
   std::vector<std::vector<cv::Point>> verts_sets_points;
   for (const auto &verts : verts_sets)
   {
@@ -111,4 +117,34 @@ std::vector<cv::Point> C2_to_points(const cv::Mat C2_mat)
     points.push_back(cv::Point(x,y));
   }
   return points;
+}
+
+cv::Mat makeTransMat(const int x_trans,const int y_trans)
+{
+  auto trans_mat = cv::Mat(cv::Mat::eye(3,3,CV_32S));
+  trans_mat.at<int>(0,2) = x_trans;
+  trans_mat.at<int>(1,2) = y_trans;
+  return trans_mat;
+}
+
+void addTransMats(std::vector<cv::Mat> &homo_mats,
+                  const int x_trans,const int y_trans)
+{
+  auto trans_mat = makeTransMat(x_trans,y_trans);
+  trans_mat.convertTo(trans_mat,CV_64F);
+  for (auto &homo_mat : homo_mats)
+    homo_mat = trans_mat * homo_mat;
+}
+
+void addTransVerts(std::vector<cv::Mat> &verts_sets,
+                   const int x_trans,const int y_trans)
+{
+  for (auto &verts : verts_sets)
+  {
+    std::vector<cv::Mat> verts_xy_split(2);
+    cv::split(verts,verts_xy_split);
+    verts_xy_split[0] = verts_xy_split[0] + x_trans;
+    verts_xy_split[1] = verts_xy_split[1] + y_trans;
+    cv::merge(verts_xy_split,verts);
+  }
 }
