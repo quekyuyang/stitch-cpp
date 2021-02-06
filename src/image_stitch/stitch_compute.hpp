@@ -76,12 +76,14 @@ public:
   std::vector<cv::Rect> getTopHalfROI(const std::vector<cv::Rect> &ROIs,const std::string &ID);
   void autoLink(std::vector<std::string> IDs,const std::vector<cv::Rect> ROIs_features);
   void manualLink(std::string ID1,std::string ID2,
-    std::vector<cv::Rect> ROIs_features1,std::vector<cv::Rect>ROIs_features2);
+    std::vector<cv::Rect> ROIs_features1,std::vector<cv::Rect>ROIs_features2,
+    const bool histequal);
   std::vector<Node> getNodes();
 
 private:
   const int _max_error_inlier;
   const int _min_n_inliers;
+  const int _nfeatures;
   std::map<std::string,Image> _images;
   Network _network;
 };
@@ -90,7 +92,6 @@ private:
 
 
 void getMatches(cv::Mat des1,cv::Mat des2,std::vector<cv::DMatch> &matches);
-cv::Mat equalizeHist(const cv::Mat &img);
 
 
 #endif

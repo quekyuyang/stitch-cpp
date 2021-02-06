@@ -41,7 +41,8 @@ int main(int argc, char** argv)
 
     std::vector<std::string> IDs_to_autolink{"lamp04","lamp02","lamp03","lamp06","lamp05"};
     stitch_computer.autoLink(IDs_to_autolink,ROIs_features_auto);
-    stitch_computer.manualLink("lamp07","lamp02",ROIs_features_manual7,ROIs_features_manual2);
+    stitch_computer.manualLink("lamp07","lamp02",ROIs_features_manual7,
+                               ROIs_features_manual2,false);
     std::vector<Node> nodes =  stitch_computer.getNodes();
     log_manager.addNodeData(nodes);
 
