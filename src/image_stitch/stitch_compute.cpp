@@ -1,13 +1,9 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <algorithm>
 #include <stdexcept>
 #include <opencv2/opencv.hpp>
 #include "stitch_compute.hpp"
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
 
 StitchComputer::StitchComputer(std::map<std::string,cv::Mat> imgs,const int nfeatures,
                                const int max_error_inlier,const int min_n_inliers)
