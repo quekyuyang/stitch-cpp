@@ -31,10 +31,11 @@ cv::Mat Image::getImg()
   return _img;
 }
 
-void Image::getKpsAndDes(std::vector<cv::KeyPoint> &kps_filter,cv::Mat &des_filter,
-                         std::vector<cv::Rect> ROIs_features,
-                         const bool histequal)
+void Image::getKpsAndDes(const int nfeatures,const bool histequal,
+  std::vector<cv::KeyPoint> &kps_filter,cv::Mat &des_filter,
+  std::vector<cv::Rect> ROIs_features)
 {
+  findFeatures(nfeatures,histequal);
   std::vector<cv::KeyPoint> *kps=nullptr;
   cv::Mat des;
   if (histequal)

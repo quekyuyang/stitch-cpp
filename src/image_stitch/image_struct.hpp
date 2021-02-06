@@ -18,9 +18,9 @@ public:
   void findFeatures(int nfeatures,const bool histequal);
 
   cv::Mat getImg();
-  void getKpsAndDes(std::vector<cv::KeyPoint> &kps,cv::Mat &des,
-                    std::vector<cv::Rect> ROIs_features,
-                    const bool histequal);
+  void getKpsAndDes(const int nfeatures,const bool histequal,
+    std::vector<cv::KeyPoint> &kps_filter,cv::Mat &des_filter,
+    std::vector<cv::Rect> ROIs_features);
   std::string getID();
   bool hasFeatures();
 };

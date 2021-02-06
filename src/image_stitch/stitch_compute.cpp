@@ -48,13 +48,10 @@ void StitchComputer::manualLink(std::string ID1,std::string ID2,
                                 std::vector<cv::Rect> ROIs_features2,
                                 const bool histequal)
 {
-  _images[ID1].findFeatures(_nfeatures,histequal);
-  _images[ID2].findFeatures(_nfeatures,histequal);
-
   std::vector<cv::KeyPoint> kps1,kps2;
   cv::Mat des1,des2;
-  _images[ID1].getKpsAndDes(kps1,des1,ROIs_features1,histequal);
-  _images[ID2].getKpsAndDes(kps2,des2,ROIs_features2,histequal);
+  _images[ID1].getKpsAndDes(_nfeatures,histequal,kps1,des1,ROIs_features1);
+  _images[ID2].getKpsAndDes(_nfeatures,histequal,kps2,des2,ROIs_features2);
 
   std::vector<cv::DMatch> matches;
   getMatches(des1,des2,matches);
@@ -75,9 +72,6 @@ void StitchComputer::manualLink(std::string ID1,std::string ID2,
 
 void StitchComputer::autoLink(std::vector<std::string> IDs,const std::vector<cv::Rect> ROIs_features)
 {
-  for (const auto &ID : IDs)
-    _images[ID].findFeatures(_nfeatures,true);
-
   for (const auto ID1 : IDs)
   {
     for (const auto ID2 : IDs)
@@ -90,8 +84,8 @@ void StitchComputer::autoLink(std::vector<std::string> IDs,const std::vector<cv:
 
       std::vector<cv::KeyPoint> kps1,kps2;
       cv::Mat des1,des2;
-      _images[ID1].getKpsAndDes(kps1,des1,ROIs_image1,true);
-      _images[ID2].getKpsAndDes(kps2,des2,ROIs_image2,true);
+      _images[ID1].getKpsAndDes(_nfeatures,true,kps1,des1,ROIs_image1);
+      _images[ID2].getKpsAndDes(_nfeatures,true,kps2,des2,ROIs_image2);
 
       std::vector<cv::DMatch> matches;
       getMatches(des1,des2,matches);
