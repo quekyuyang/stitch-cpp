@@ -44,26 +44,8 @@ void StitchComputer::manualLink(std::string ID1,std::string ID2,
                                 std::vector<cv::Rect> ROIs_features2,
                                 const bool histequal)
 {
-  std::vector<cv::KeyPoint> kps1,kps2;
-  cv::Mat des1,des2;
-  _images[ID1].getKpsAndDes(_nfeatures,histequal,kps1,des1,ROIs_features1);
-  _images[ID2].getKpsAndDes(_nfeatures,histequal,kps2,des2,ROIs_features2);
-
-  std::vector<cv::DMatch> matches;
-  getMatches(des1,des2,matches);
-  std::vector<cv::Point2f> pts1_match,pts2_match;
-  for (const auto &match : matches)
-  {
-    pts1_match.push_back(kps1[match.queryIdx].pt);
-    pts2_match.push_back(kps2[match.trainIdx].pt);
-  }
-
-  cv::Mat mask;
-  const cv::Mat homo_mat = cv::findHomography(pts2_match,pts1_match,cv::RANSAC,
-                                              _max_error_inlier,mask);
-  const int n_inliers = cv::sum(mask)[0];
-
-  _network.addLink(ID1,ID2,n_inliers,homo_mat);
+  const auto link = createLink(ID1,ID2,histequal,ROIs_features1,ROIs_features2);
+  _network.addLinkToNode(ID1,link);
 }
 
 void StitchComputer::autoLink(std::vector<std::string> IDs,const std::vector<cv::Rect> ROIs_features)
@@ -78,29 +60,39 @@ void StitchComputer::autoLink(std::vector<std::string> IDs,const std::vector<cv:
       auto ROIs_image1 = getBotHalfROI(ROIs_features,ID1);
       auto ROIs_image2 = getTopHalfROI(ROIs_features,ID2);
 
-      std::vector<cv::KeyPoint> kps1,kps2;
-      cv::Mat des1,des2;
-      _images[ID1].getKpsAndDes(_nfeatures,true,kps1,des1,ROIs_image1);
-      _images[ID2].getKpsAndDes(_nfeatures,true,kps2,des2,ROIs_image2);
+      const auto link = createLink(ID1,ID2,true,ROIs_image1,ROIs_image2);
 
-      std::vector<cv::DMatch> matches;
-      getMatches(des1,des2,matches);
-
-      std::vector<cv::Point2f> pts1_match,pts2_match;
-      for (const auto &match : matches)
-      {
-        pts1_match.push_back(kps1[match.queryIdx].pt);
-        pts2_match.push_back(kps2[match.trainIdx].pt);
-      }
-
-      cv::Mat mask;
-      const cv::Mat homo_mat = cv::findHomography(pts2_match,pts1_match,cv::RANSAC,_max_error_inlier,mask);
-      const int n_inliers = cv::sum(mask)[0];
-
-      if (n_inliers > _min_n_inliers)
-        _network.addLink(ID1,ID2,n_inliers,homo_mat);
+      if (link.getNInliers() > _min_n_inliers)
+        _network.addLinkToNode(ID1,link);
     }
   }
+}
+
+Link StitchComputer::createLink(const std::string ID1, const std::string ID2,
+  const bool histequal, const std::vector<cv::Rect> ROIs_image1,
+  const std::vector<cv::Rect> ROIs_image2)
+{
+  std::vector<cv::KeyPoint> kps1,kps2;
+  cv::Mat des1,des2;
+  _images[ID1].getKpsAndDes(_nfeatures,histequal,kps1,des1,ROIs_image1);
+  _images[ID2].getKpsAndDes(_nfeatures,histequal,kps2,des2,ROIs_image2);
+
+  std::vector<cv::DMatch> matches;
+  getMatches(des1,des2,matches);
+
+  std::vector<cv::Point2f> pts1_match,pts2_match;
+  for (const auto &match : matches)
+  {
+    pts1_match.push_back(kps1[match.queryIdx].pt);
+    pts2_match.push_back(kps2[match.trainIdx].pt);
+  }
+
+  cv::Mat mask;
+  const cv::Mat homo_mat = cv::findHomography(pts2_match,pts1_match,cv::RANSAC,
+    _max_error_inlier,mask);
+  const int n_inliers = cv::sum(mask)[0];
+
+  return Link(ID2,n_inliers,homo_mat);
 }
 
 std::vector<Node> StitchComputer::getNodes()
@@ -115,6 +107,11 @@ std::vector<Node> StitchComputer::getNodes()
 void Network::addNode(std::string ID)
 {
   _nodes.emplace(ID,Node(ID));
+}
+
+void Network::addLinkToNode(const std::string node_ID,const Link link)
+{
+  _nodes[node_ID].addLink(link);
 }
 
 void Network::addLink(const std::string ID1,const std::string ID2,const int n_inliers,const cv::Mat homo_mat)
@@ -136,6 +133,7 @@ std::vector<Node> Network::getNodes() const
     nodes.push_back(node);
     std::cout << node._ID << std::endl;
     std::cout << node.getBestLink().getTargetID() << std::endl;
+    std::cout << node.getBestLink().getNInliers() << std::endl;
   }
 
 
@@ -148,6 +146,14 @@ std::vector<Node> Network::getNodes() const
 Node::Node(std::string ID)
   : _ID(ID)
 {}
+
+void Node::addLink(const Link link)
+{
+  if (_links.count(link._target_ID) == 0)
+    _links.emplace(link._target_ID,link);
+  else
+    throw std::runtime_error("Attempt to add already existing link");
+}
 
 void Node::addLink(const std::string target_ID,const int n_inliers,const cv::Mat homo_mat)
 {

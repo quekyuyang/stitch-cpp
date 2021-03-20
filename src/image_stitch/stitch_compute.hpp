@@ -36,6 +36,7 @@ friend Network;
 
 public:
   Node (std::string ID="");
+  void addLink(const Link link);
   void addLink(const std::string target_ID,const int n_inliers,const cv::Mat homo_mat);
   void findBestLink();
   std::string getID() const;
@@ -56,6 +57,7 @@ friend StitchComputer;
 
 public:
   void addNode(std::string ID);
+  void addLinkToNode(const std::string node_ID,const Link link);
   void addLink(const std::string ID1,const std::string ID2,const int n_inliers,const cv::Mat);
   void findBestLinks();
   std::vector<Node> getNodes() const;
@@ -78,6 +80,9 @@ public:
   void manualLink(std::string ID1,std::string ID2,
     std::vector<cv::Rect> ROIs_features1,std::vector<cv::Rect>ROIs_features2,
     const bool histequal);
+  Link createLink(const std::string ID1, const std::string ID2,
+    const bool histequal, const std::vector<cv::Rect> ROIs_image1,
+    const std::vector<cv::Rect> ROIs_image2);
   std::vector<Node> getNodes();
 
 private:
